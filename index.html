@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+<!-- LINKS A GOOGLE FONTS  -->
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=OpenSans&family=Roboto:wght@300&display=swap" rel="stylesheet">
+<!-- LINKS A HOJA DE ESTILO CSS  -->
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+  
+<h1>Chat en Tiempo Real</h1>
+<div id="michat" >
+<!-- AREA DE MENSAJES -->
+<pre id="messages" style="height: 250px; overflow-y: scroll"></pre>
+<!-- CAJA DE MENSAJE -->
+<input type="text" id="messageBox" placeholder="Ingrese su mensaje"  />
+<!-- BOTON ENVIAR -->
+<button id="send" title="Send Message!" style="width: 100%;height: 100%; ">Enviar Mensaje</button>
+
+
+<!-- FUNCION ANONIMA JAVASCRIPT -->
+
+<script>
+  (function() {
+
+    /* SELECCIONAR ELEMENTOS */
+    const sendBtn = document.querySelector('#send');
+    const messages = document.querySelector('#messages');
+    const messageBox = document.querySelector('#messageBox');
+
+    let ws;
+
+    function showMessage(message,origen) {
+    
+    /* MOSTRAR MENSAJES - DISTINGUIR ENTRE ENVIADO Y RECIBO */  
+    if (origen=="enviado")
+    {
+     messages.innerHTML += "<p class='enviado'>"+message+"</p>";
+    /* messages.textContent += `\n${message}`; */
+    } 
+    
+    if (origen == "recibido") {
+        messages.innerHTML += "<p class='recibido'>" + message + "</p>";
+        /* messages.textContent += `\n${message}`; */
+      } 
+
+     messages.scrollTop = messages.scrollHeight;
+      messageBox.value = '';
+    }
+
+    /* CREACION DE WEB SOCKET - MENSAJES DE ESTADO */
+
+    function init() {
+      if (ws) {
+        ws.onerror = ws.onopen = ws.onclose = null;
+        ws.close();
+      }
+
+      ws = new WebSocket('ws://localhost:6969');
+      ws.onopen = () => {
+        console.log('Connection opened!');
+      }
+      ws.onmessage = ({ data }) => showMessage(data,"recibido");
+      ws.onclose = function() {
+        ws = null;
+      }
+    }
+
+    sendBtn.onclick = function() {
+      if (!ws) {
+        showMessage("No WebSocket connection :(");
+        return ;
+      }
+
+      ws.send(messageBox.value);
+      showMessage(messageBox.value,"enviado");
+    }
+
+    init();
+  })();
+</script>
+</div>
+</body>
+</html>
